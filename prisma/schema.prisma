@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // <-- ADDED THIS
+}
+
+enum Role {
+  ADMIN
+  LIBRARIAN
+  MEMBER
+}
+
+model Book {
+  id          Int      @id @default(autoincrement())
+  title       String
+  author      String   // <-- ADDED
+  isbn        String   @unique
+  totalCopies Int      // <-- ADDED
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  genreId     Int      // <-- ADDED (Direct link for easy filtering)
+  genre       Genre    @relation(fields: [genreId], references: [id])
+  reviews     Review[]
+}
+
+model Genre {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  books Book[] 
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String   // <-- ADDED (Required for Auth)
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  
+  // Relations
+  reviews   Review[]
+}
+
+// STRETCH GOAL: Review Model
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      
+  comment   String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  bookId    Int
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
